@@ -1,4 +1,5 @@
 import store from './redux/store';
+console.log(store);
 import * as actions from './redux/actions';
 
 var canvas = document.getElementById('my-canvas');
@@ -13,34 +14,36 @@ var ballRadius = 10;
 
 var randomBallColors = ["#af3421", "#5bc144", "#038922", "#f188aa", "#ef5130", "#f17fa9", "#0d8d7f", "#97aaf8"];
 
-var paddleHeight = 10;
-var paddleWidth = 75;
-var paddleX = (canvas.width - paddleWidth) / 2;
-var paddleY = canvas.height - paddleHeight;
-var paddleMoveSpeed = 7;
+//put paddle in redux
+// var paddleHeight = 10;
+// var paddleWidth = 75;
+// var paddleX = (canvas.width - paddleWidth) / 2;
+// var paddleY = canvas.height - paddleHeight;
+// var paddleMoveSpeed = 7;
 
 var rightPressed = false;
 var leftPressed = false;
 var enterPressed = false;
 
-var brickRowCount = 3;
-var brickColumnCount = 5;
-var brickWidth = 75;
-var brickHeight = 20;
-var brickPadding = 10;
-var brickOffsetTop = 30;
-var brickOffsetLeft = 30;
-
 var winningScore = 0;
 
 var isSplashScreenDisplayed = true;
 
+//put brick stuff in redux
+// var brickRowCount = 3;
+// var brickColumnCount = 5;
+// var brickWidth = 75;
+// var brickHeight = 20;
+// var brickPadding = 10;
+// var brickOffsetTop = 30;
+// var brickOffsetLeft = 30;
 var bricks = [];
-for(var col = 0; col < brickColumnCount; col++) {
+
+for(var col = 0; col < store.getState().brickColumnCount; col++) {
 	bricks[col] = [];
-	for(var row = 0; row < brickRowCount; row++) {
+	for(var row = 0; row < store.getState().brickRowCount; row++) {
 		bricks[col][row] = {x: 0, y: 0, status: 2};
-		winningScore = brickRowCount * brickColumnCount * bricks[col][row].status;
+		winningScore = store.getState().brickRowCount * store.getState().brickColumnCount * bricks[col][row].status;
 	}
 }
 
@@ -56,22 +59,23 @@ function drawBall() {
 
 function drawPaddle() {
 	ctx.beginPath();
-	ctx.rect(paddleX, paddleY, paddleWidth, paddleHeight);
+	ctx.rect(store.getState().paddleX, store.getState().paddleY, store.getState().paddleWidth, store.getState().paddleHeight);
 	ctx.fillStyle = "#0095DD";
 	ctx.fill();
 	ctx.closePath();
 }
 
 function drawBricks() {
-	for(var col = 0; col < brickColumnCount; col++) {
-		for(var row = 0; row < brickRowCount; row++) {
+	for(var col = 0; col < store.getState().brickColumnCount; col++) {
+		for(var row = 0; row < store.getState().brickRowCount; row++) {
 			if(bricks[col][row].status > 0) {
-				var brickX = (col * (brickWidth + brickPadding)) + brickOffsetLeft;
-				var brickY = (row * (brickHeight + brickPadding)) + brickOffsetTop;
-				bricks[col][row].x = brickX;
-				bricks[col][row].y = brickY;
+				store.dispatch(actions.getBrickX(col)); //sets store.getState().brickX
+				store.dispatch(actions.getBrickY(row)); //store.getState().brickY
+				bricks[col][row].x = store.getState().brickX;
+				bricks[col][row].y = store.getState().brickY;
+
 				ctx.beginPath();
-				ctx.rect(brickX, brickY, brickWidth, brickHeight);
+				ctx.rect(store.getState().brickX, store.getState().brickY, store.getState().brickWidth, store.getState().brickHeight);
 				ctx.fillStyle = "#0095DD";
 				ctx.fill();
 				ctx.closePath();
@@ -95,19 +99,19 @@ function drawLives() {
 function showSplashScreen() {
 	ctx.font = "24px Arial";
 	ctx.fillStyle = "lightgreen";
-	ctx.textAlign = "center";
+	//ctx.textAlign = "center";
 	ctx.fillText("Breakout!", canvas.width / 2, 40);
 	ctx.fillText("press enter to play", canvas.width / 2, 100);
 	//isSplashScreenDisplayed = true;
 }
 
 function brickCollision() {
-	for(var col = 0; col < brickColumnCount; col++) {
-		for(var row = 0; row < brickRowCount; row++) {
+	for(var col = 0; col < store.getState().brickColumnCount; col++) {
+		for(var row = 0; row < store.getState().brickRowCount; row++) {
 			var brick = bricks[col][row];
 
 			if(brick.status > 0) {
-				if(ball.x > brick.x && ball.x < brick.x + brickWidth && ball.y > brick.y && ball.y < brick.y + brickHeight) {
+				if(ball.x > brick.x && ball.x < brick.x + store.getState().brickWidth && ball.y > brick.y && ball.y < brick.y + store.getState().brickHeight) {
 					store.dispatch(actions.randomColor(randomBallColors));
 					ballVelocity.y = -ballVelocity.y;
 					brick.status--;
@@ -121,6 +125,12 @@ function brickCollision() {
 			}
 		}
 	}
+}
+
+function _resetBallAndPaddle() {
+	ball = {x: canvas.width / 2, y: canvas.height - 30};
+	ballVelocity = {x: 4, y: -4};
+	store.dispatch(actions.resetPaddleXAndY());
 }
 
 function wallCollision() {
@@ -137,10 +147,7 @@ function wallCollision() {
 			isSplashScreenDisplayed = true;
 		}
 		else {
-			ball = {x: canvas.width / 2, y: canvas.height - 30};
-			ballVelocity = {x: 4, y: -4};
-			paddleX = (canvas.width - paddleWidth) / 2;
-			paddleY = canvas.height - paddleHeight;
+			_resetBallAndPaddle();
 		}
 	}
 
@@ -152,28 +159,28 @@ function wallCollision() {
 }
 
 function paddleCollision() {
-	if(ball.x > paddleX && ball.x < paddleX + paddleWidth && ball.y > paddleY - paddleHeight) {
+	if(ball.x > store.getState().paddleX && ball.x < store.getState().paddleX + store.getState().paddleWidth && ball.y > store.getState().paddleY - store.getState().paddleHeight) {
 		store.dispatch(actions.randomColor(randomBallColors));
 		ballVelocity.y = -ballVelocity.y;
 	}
 }
 
 function playerInput() {
-	if(rightPressed && paddleX < canvas.width - paddleWidth) {
-		paddleX += paddleMoveSpeed;
+	if(rightPressed && store.getState().paddleX < canvas.width - store.getState().paddleWidth) {
+		store.dispatch(actions.movePaddle(7));
 	}
-	else if(leftPressed && paddleX > 0) {
-		paddleX -= paddleMoveSpeed;
+	else if(leftPressed && store.getState().paddleX > 0) {
+		store.dispatch(actions.movePaddle(-7));
 	}
 }
 
 function draw() {
 	if(isSplashScreenDisplayed) {
 		showSplashScreen();
-		console.log("splash is showing");
+		//console.log("splash is showing");
 
 		if(enterPressed) {
-			console.log("you pressed enter");
+			//console.log("you pressed enter");
 			isSplashScreenDisplayed = false;
 		}
 	}

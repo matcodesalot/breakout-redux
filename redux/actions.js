@@ -21,3 +21,34 @@ export function randomColor(colors) {
 		payload: colors,
 	};
 }
+
+export const MOVE_PADDLE = 'MOVE_PADDLE';
+export function movePaddle(moveSpeed) {
+	return {
+		type: MOVE_PADDLE,
+		payload: moveSpeed,
+	};
+}
+
+export const RESET_PADDLE_X_AND_Y = 'RESET_PADDLE_X_AND_Y';
+export function resetPaddleXAndY() {
+	return {
+		type: RESET_PADDLE_X_AND_Y,
+	};
+}
+
+export const GET_BRICK_X = 'GET_BRICK_X';
+export function getBrickX(col) {
+	return {
+		type: GET_BRICK_X,
+		payload: col,
+	};
+}
+
+export const GET_BRICK_Y = 'GET_BRICK_Y';
+export function getBrickY(row) {
+	return {
+		type: GET_BRICK_Y,
+		payload: row,
+	};
+}
