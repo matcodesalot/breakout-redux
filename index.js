@@ -30,7 +30,10 @@ var brickHeight = 20;
 var brickPadding = 10;
 var brickOffsetTop = 30;
 var brickOffsetLeft = 30;
+
 var winningScore = 0;
+
+var isSplashScreenDisplayed = true;
 
 var bricks = [];
 for(var col = 0; col < brickColumnCount; col++) {
@@ -89,6 +92,15 @@ function drawLives() {
 	ctx.fillText(`Lives: ${store.getState().lives}`, canvas.width - 65, 20);
 }
 
+function showSplashScreen() {
+	ctx.font = "24px Arial";
+	ctx.fillStyle = "lightgreen";
+	ctx.textAlign = "center";
+	ctx.fillText("Breakout!", canvas.width / 2, 40);
+	ctx.fillText("press enter to play", canvas.width / 2, 100);
+	//isSplashScreenDisplayed = true;
+}
+
 function brickCollision() {
 	for(var col = 0; col < brickColumnCount; col++) {
 		for(var row = 0; row < brickRowCount; row++) {
@@ -103,8 +115,7 @@ function brickCollision() {
 					store.dispatch(actions.increaseScore(1));
 					//TODO: change winning condition to when all the bricks are destroyed
 					if(store.getState().score === winningScore) {
-						alert("YOU WIN! CONGRATULATIONS!");
-						document.location.reload();
+						isSplashScreenDisplayed = true;
 					}
 				}
 			}
@@ -123,8 +134,7 @@ function wallCollision() {
 	if(ball.y + ballVelocity.y > canvas.height - ballRadius) {
 		store.dispatch(actions.loseLife(1));
 		if(store.getState().lives <= 0) {
-			alert("GAME OVER");
-			document.location.reload();
+			isSplashScreenDisplayed = true;
 		}
 		else {
 			ball = {x: canvas.width / 2, y: canvas.height - 30};
@@ -158,25 +168,36 @@ function playerInput() {
 }
 
 function draw() {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	if(isSplashScreenDisplayed) {
+		showSplashScreen();
+		console.log("splash is showing");
 
-	//draw things
-	drawBall();
-	drawPaddle();
-	drawBricks();
-	drawScore();
-	drawLives();
+		if(enterPressed) {
+			console.log("you pressed enter");
+			isSplashScreenDisplayed = false;
+		}
+	}
+	else {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	//handle collision
-	brickCollision();
-	wallCollision();
-	paddleCollision();
+		//draw things
+		drawBall();
+		drawPaddle();
+		drawBricks();
+		drawScore();
+		drawLives();
 
-	//input
-	playerInput();
+		//handle collision
+		brickCollision();
+		wallCollision();
+		paddleCollision();
 
-	ball.x += ballVelocity.x;
-	ball.y += ballVelocity.y;
+		//input
+		playerInput();
+
+		ball.x += ballVelocity.x;
+		ball.y += ballVelocity.y;
+	}
 
 	requestAnimationFrame(draw);
 }
