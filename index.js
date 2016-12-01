@@ -1,5 +1,4 @@
 import store from './redux/store';
-console.log(store);
 import * as actions from './redux/actions';
 
 var canvas = document.getElementById('my-canvas');
@@ -23,7 +22,7 @@ var randomBallColors = ["#af3421", "#5bc144", "#038922", "#f188aa", "#ef5130", "
 
 var rightPressed = false;
 var leftPressed = false;
-var enterPressed = false;
+var startPressed = false;
 
 var winningScore = 0;
 
@@ -96,13 +95,26 @@ function drawLives() {
 	ctx.fillText(`Lives: ${store.getState().lives}`, canvas.width - 65, 20);
 }
 
+function drawStartButton() {
+	ctx.beginPath();
+	ctx.rect(canvas.width / 2, canvas.height / 2, 65, 40);
+	ctx.fillStyle = "#0095DD";
+	ctx.fill();
+	ctx.font = "20px Arial";
+	ctx.fillStyle = "white";
+	ctx.fillText("Start", canvas.width / 2, canvas.height / 2 + 20);
+	ctx.closePath();
+}
+
 function showSplashScreen() {
 	ctx.font = "24px Arial";
-	ctx.fillStyle = "lightgreen";
+	ctx.fillStyle = "#0095DD";
 	//ctx.textAlign = "center";
 	ctx.fillText("Breakout!", canvas.width / 2, 40);
-	ctx.fillText("press enter to play", canvas.width / 2, 100);
+	ctx.fillText("press start to play", canvas.width / 2, 100);
 	//isSplashScreenDisplayed = true;
+
+	drawStartButton();
 }
 
 function brickCollision() {
@@ -177,11 +189,21 @@ function playerInput() {
 function draw() {
 	if(isSplashScreenDisplayed) {
 		showSplashScreen();
-		//console.log("splash is showing");
 
-		if(enterPressed) {
-			//console.log("you pressed enter");
+		if(startPressed) {
+			//reset the game
+			store.dispatch(actions.reset());
+			ball = {x: canvas.width / 2, y: canvas.height - 30};
+			for(var col = 0; col < store.getState().brickColumnCount; col++) {
+				bricks[col] = [];
+				for(var row = 0; row < store.getState().brickRowCount; row++) {
+					bricks[col][row] = {x: 0, y: 0, status: 2};
+					winningScore = store.getState().brickRowCount * store.getState().brickColumnCount * bricks[col][row].status;
+				}
+			}
+
 			isSplashScreenDisplayed = false;
+			startPressed = false;
 		}
 	}
 	else {
@@ -211,6 +233,7 @@ function draw() {
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener('mousedown', mouseDownHandler, false);
 
 function keyDownHandler(e) {
 	if(e.keyCode === 39) {
@@ -218,9 +241,6 @@ function keyDownHandler(e) {
 	}
 	else if(e.keyCode === 37) {
 		leftPressed = true;
-	}
-	else if(e.keyCode === 13) {
-		enterPressed = true;
 	}
 }
 
@@ -231,8 +251,17 @@ function keyUpHandler(e) {
 	else if(e.keyCode === 37) {
 		leftPressed = false;
 	}
-	else if(e.keyCode === 13) {
-		enterPressed = false;
+}
+
+function mouseDownHandler(e) {
+	var lastDownTarget = e.target;
+	var x = e.pageX - canvas.offsetLeft;
+	var y = e.pageY - canvas.offsetTop;
+	console.log('mousedown', lastDownTarget, x, y);
+
+	if(x > canvas.width / 2 && x < canvas.width / 2 + 65 && y > canvas.height / 2 && y < canvas.height / 2 + 40) {
+		console.log("you;re in the button");
+		startPressed = true;
 	}
 }
 

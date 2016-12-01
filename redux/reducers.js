@@ -57,6 +57,9 @@ export default function gameReducer(state = initialState, action) {
 				brickY: (action.payload * (state.brickHeight + state.brickPadding)) + state.brickOffset
 			});
 
+		case actions.RESET:
+			return initialState;
+
 		default:
 			return state;
 	}

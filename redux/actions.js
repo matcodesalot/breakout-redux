@@ -52,3 +52,10 @@ export function getBrickY(row) {
 		payload: row,
 	};
 }
+
+export const RESET = 'RESET';
+export function reset() {
+	return {
+		type: RESET,
+	};
+}
